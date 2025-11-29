@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const ALLOWED_ORIGIN = "https://allinfofinder.vercel.app";
 
   function sendWarningPage() {
-    const html = `<!-- Encryption By @BJ_DEVS on Telegram -->
+    const html = `<!-- Encryption By @Royal_smart_boy on Telegram -->
 <!-- This tool only encrypts your script to make it difficult to read, not that it cannot be decoded. -->
 
 <script>
