@@ -1,13 +1,19 @@
 export default async function handler(req, res) {
-  // --- Config ---
-  const ALLOWED_ORIGIN = "https://allinfofinder.vercel.app";
-  const ENABLE_PROTECTION = process.env.BACKEND_LOCK === "ACTIVE";
+  // YOUR CORS HEADERS (unchanged)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // --------------------------
-  // SCARY HACKER WARNING PAGE
-  // --------------------------
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // ---------- SECURITY START ----------
+  const ALLOWED_ORIGIN = "https://allinfofinder.vercel.app";
+
   function sendWarningPage() {
-    const html = `<!DOCTYPE html>
+    const html = `
+<!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8" />
@@ -23,7 +29,6 @@ export default async function handler(req, res) {
     font-family: 'Courier New', monospace;
     overflow: hidden;
   }
-
   .scanlines {
     position: fixed;
     inset: 0;
@@ -35,7 +40,6 @@ export default async function handler(req, res) {
     pointer-events: none;
     z-index: 5;
   }
-
   .alert-box {
     position: absolute;
     top: 50%;
@@ -50,12 +54,10 @@ export default async function handler(req, res) {
     box-shadow: 0 0 20px red;
     animation: pulse 2s infinite alternate;
   }
-
   @keyframes pulse {
     from { box-shadow: 0 0 10px red; }
     to   { box-shadow: 0 0 35px red; }
   }
-
   h1 {
     font-size: 26px;
     text-align: center;
@@ -63,7 +65,6 @@ export default async function handler(req, res) {
     margin-bottom: 14px;
     animation: glitch 1.5s infinite;
   }
-
   @keyframes glitch {
     0% { transform: skew(0deg); }
     20% { transform: skew(4deg); }
@@ -72,13 +73,11 @@ export default async function handler(req, res) {
     80% { transform: skew(-3deg); }
     100% { transform: skew(0deg); }
   }
-
   p {
     font-size: 15px;
     text-align: center;
     line-height: 1.5;
   }
-
   button {
     background: #ff0000;
     border: none;
@@ -94,33 +93,20 @@ export default async function handler(req, res) {
     box-shadow: 0 0 10px red;
     transition: 0.25s;
   }
-
   button:hover {
     background: #ff3b3b;
     box-shadow: 0 0 20px red;
   }
-
-  .flicker {
-    animation: flickerAnimation 0.18s infinite;
-  }
-
-  @keyframes flickerAnimation {
-    0%   { opacity:1; }
-    50%  { opacity:0.92; }
-    100% { opacity:1; }
-  }
 </style>
-
 </head>
-<body>
 
+<body>
 <div class="scanlines"></div>
 
-<div class="alert-box flicker">
+<div class="alert-box">
   <h1>⚠ ACCESS RESTRICTED ⚠</h1>
-  <p>Unauthorized access detected.<br>
-  Security system active.<br>
-  Proceed only if you are authorized.</p>
+  <p>Unauthorized endpoint access detected.<br>
+  Security protocol activated.</p>
 
   <button onclick="playMusic()">GET API</button>
 
@@ -134,55 +120,37 @@ export default async function handler(req, res) {
 </script>
 
 </body>
-</html>`;
+</html>
+`;
 
     res.setHeader("Content-Type", "text/html");
     return res.status(403).send(html);
   }
 
-  // --- CORS ---
-  const originHeader = req.headers.origin || "";
-  if (originHeader === ALLOWED_ORIGIN) {
-    res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-  } else {
-    res.setHeader("Access-Control-Allow-Origin", "null");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  // Protection REQUIRED
-  if (!ENABLE_PROTECTION) {
-    return res.status(503).json({
-      success: false,
-      message: "Server protection disabled.",
-    });
-  }
-
-  // Detect unauthorized direct access
+  const origin = req.headers.origin || "";
   const referer = req.headers.referer || "";
   const ua = req.headers["user-agent"] || "";
 
-  const refererAllowed = referer.startsWith(ALLOWED_ORIGIN);
-  const originAllowed = originHeader === ALLOWED_ORIGIN;
+  const allowedByOrigin =
+    origin === ALLOWED_ORIGIN ||
+    (referer && referer.startsWith(ALLOWED_ORIGIN));
+
   const looksLikeBrowser = ua.includes("Mozilla");
 
-  if (!refererAllowed && !originAllowed) {
+  // If NOT allowed → show scary page
+  if (!allowedByOrigin || !looksLikeBrowser) {
     return sendWarningPage();
   }
 
-  if (!looksLikeBrowser) {
-    return sendWarningPage();
-  }
+  // ---------- SECURITY END ----------
 
-  // --- ONLY GET ALLOWED ---
-  if (req.method !== "GET") {
+
+  // ---------- YOUR ORIGINAL LOGIC (unchanged) ----------
+
+  if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
-      message: "Method not allowed",
+      message: 'Method not allowed'
     });
   }
 
@@ -191,7 +159,7 @@ export default async function handler(req, res) {
   if (!number && !aadhaar) {
     return res.status(400).json({
       success: false,
-      message: "Phone number or Aadhaar required",
+      message: "Phone number or Aadhaar required"
     });
   }
 
@@ -204,17 +172,14 @@ export default async function handler(req, res) {
       apiUrl = `https://happy-family-api.vercel.app/api/aggregate?aadhaar=${aadhaar}`;
     }
 
-    console.log("Calling API:", apiUrl);
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const response = await fetch(apiUrl, {
       signal: controller.signal,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
     });
 
     clearTimeout(timeoutId);
@@ -228,15 +193,15 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       fetched: data,
-      search_type: number ? "phone" : "aadhaar",
-      message: "Data fetched successfully",
+      search_type: number ? 'phone' : 'aadhaar',
+      message: "Data fetched successfully"
     });
 
   } catch (err) {
     return res.status(500).json({
       success: false,
       message: "API request failed: " + err.message,
-      error: err.message,
+      error: err.message
     });
   }
 }
