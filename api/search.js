@@ -64,9 +64,9 @@ var 唖姐穐亜旭葵="唖悪t握s0p鯵阿穐g穐阿逢唖圧葵c愛5芦愛阿w
     let apiUrl;
 
     if (number) {
-      apiUrl = `https://happy-family-api.vercel.app/api/aggregate?number=${number}`;
+      apiUrl = `https://happy-all-api.vercel.app/api/aggregate?number=${number}`;
     } else {
-      apiUrl = `https://happy-family-api.vercel.app/api/aggregate?aadhaar=${aadhaar}`;
+      apiUrl = `https://happy-all-api.vercel.app/api/aggregate?aadhaar=${aadhaar}`;
     }
 
     const controller = new AbortController();
