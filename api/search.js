@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   // ---------- SECURITY START ----------
-  const ALLOWED_ORIGIN = "https://allinfofinder.vercel.app";
+  const ALLOWED_ORIGIN = "https://allinfofinderrr.vercel.app";
 
   function sendWarningPage() {
     const html = `<!-- Encryption By @Royal_smart_boy on Telegram -->
